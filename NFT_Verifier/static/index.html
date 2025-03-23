@@ -1,0 +1,1016 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>NFT Verifier</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/1.3.4/axios.min.js"></script>
+    <style>
+      :root {
+        --primary: #6366f1;
+        --primary-hover: #4f46e5;
+        --secondary: #f3f4f6;
+        --text: #1f2937;
+        --error: #ef4444;
+        --success: #10b981;
+        --warning: #f59e0b;
+      }
+
+      body {
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        background-color: #f9fafb;
+        color: var(--text);
+        margin: 0;
+        padding: 20px;
+        line-height: 1.6;
+      }
+
+      .container {
+        max-width: 1000px;
+        margin: 0 auto;
+        padding: 20px;
+      }
+
+      h1 {
+        text-align: center;
+        color: var(--primary);
+        margin-bottom: 2rem;
+      }
+
+      .tabs {
+        display: flex;
+        margin-bottom: 20px;
+        border-bottom: 1px solid #e5e7eb;
+      }
+
+      .tab {
+        padding: 10px 20px;
+        cursor: pointer;
+        border: none;
+        background: none;
+        font-size: 16px;
+        font-weight: 500;
+        color: #6b7280;
+      }
+
+      .tab.active {
+        color: var(--primary);
+        border-bottom: 2px solid var(--primary);
+      }
+
+      .tab-content {
+        display: none;
+      }
+
+      .tab-content.active {
+        display: block;
+      }
+
+      .form-group {
+        margin-bottom: 15px;
+      }
+
+      label {
+        display: block;
+        margin-bottom: 5px;
+        font-weight: 500;
+      }
+
+      input[type="text"] {
+        width: 100%;
+        padding: 10px;
+        border: 1px solid #d1d5db;
+        border-radius: 6px;
+        box-sizing: border-box;
+        font-size: 16px;
+      }
+
+      input[type="text"]:focus {
+        outline: none;
+        border-color: var(--primary);
+        box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+      }
+
+      button {
+        background-color: var(--primary);
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 16px;
+        font-weight: 500;
+        transition: background-color 0.2s;
+      }
+
+      button:hover {
+        background-color: var(--primary-hover);
+      }
+
+      .result {
+        margin-top: 20px;
+        padding: 20px;
+        background-color: white;
+        border-radius: 6px;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        display: none;
+      }
+
+      .error {
+        color: var(--error);
+        margin-top: 10px;
+        font-size: 14px;
+      }
+
+      .success {
+        color: var(--success);
+      }
+
+      .warning {
+        color: var(--warning);
+      }
+
+      .loading {
+        text-align: center;
+        margin-top: 20px;
+        font-style: italic;
+        color: #6b7280;
+        display: none;
+      }
+
+      .nft-card {
+        border: 1px solid #e5e7eb;
+        border-radius: 8px;
+        padding: 15px;
+        margin-bottom: 15px;
+        background-color: white;
+      }
+
+      .nft-card h3 {
+        margin-top: 0;
+        color: var(--primary);
+      }
+
+      pre {
+        background-color: #f3f4f6;
+        padding: 15px;
+        border-radius: 6px;
+        overflow-x: auto;
+        font-size: 14px;
+      }
+
+      .verification-badge {
+        display: inline-block;
+        padding: 3px 10px;
+        border-radius: 20px;
+        font-size: 14px;
+        font-weight: 500;
+        margin-bottom: 10px;
+      }
+
+      .verified {
+        background-color: rgba(16, 185, 129, 0.1);
+        color: var(--success);
+        border: 1px solid var(--success);
+      }
+
+      .unverified {
+        background-color: rgba(239, 68, 68, 0.1);
+        color: var(--error);
+        border: 1px solid var(--error);
+      }
+
+      .warning-badge {
+        background-color: rgba(245, 158, 11, 0.1);
+        color: var(--warning);
+        border: 1px solid var(--warning);
+      }
+
+      .risk-meter {
+        width: 100%;
+        height: 10px;
+        background-color: #e5e7eb;
+        border-radius: 5px;
+        margin: 10px 0;
+        overflow: hidden;
+      }
+
+      .risk-level {
+        height: 100%;
+        border-radius: 5px;
+        background: linear-gradient(
+          90deg,
+          #10b981 0%,
+          #f59e0b 50%,
+          #ef4444 100%
+        );
+        transition: width 0.5s ease;
+      }
+
+      .risk-factors {
+        margin-top: 10px;
+        padding: 10px;
+        background-color: #f9fafb;
+        border-radius: 6px;
+        border-left: 3px solid var(--warning);
+      }
+
+      .summary-box {
+        background-color: #f9fafb;
+        border-radius: 6px;
+        padding: 15px;
+        margin-bottom: 20px;
+        border-left: 3px solid var(--primary);
+      }
+
+      /* Responsive */
+      @media (max-width: 768px) {
+        .tabs {
+          flex-wrap: wrap;
+        }
+
+        .tab {
+          flex: 1 0 33%;
+          text-align: center;
+          padding: 10px 5px;
+          font-size: 14px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>NFT Verifier</h1>
+
+      <div class="tabs">
+        <button class="tab active" data-tab="owner">Verify by Owner</button>
+        <button class="tab" data-tab="collection">Verify by Collection</button>
+        <button class="tab" data-tab="nft">Verify Single NFT</button>
+      </div>
+
+      <!-- Verify by Owner Tab -->
+      <div id="owner-tab" class="tab-content active">
+        <form id="owner-form">
+          <div class="form-group">
+            <label for="owner-address">Owner Address</label>
+            <input
+              type="text"
+              id="owner-address"
+              placeholder="Enter owner wallet address"
+              required
+            />
+          </div>
+          <button type="submit">Verify NFTs</button>
+        </form>
+      </div>
+
+      <!-- Verify by Collection Tab -->
+      <div id="collection-tab" class="tab-content">
+        <form id="collection-form">
+          <div class="form-group">
+            <label for="creator-address">Creator Address</label>
+            <input
+              type="text"
+              id="creator-address"
+              placeholder="Enter creator wallet address"
+              required
+            />
+          </div>
+          <div class="form-group">
+            <label for="collection-name">Collection Name</label>
+            <input
+              type="text"
+              id="collection-name"
+              placeholder="Enter collection name"
+              required
+            />
+          </div>
+          <div class="form-group">
+            <label for="collection-token-id">Token ID (Optional)</label>
+            <input
+              type="text"
+              id="collection-token-id"
+              placeholder="Enter specific token ID (optional)"
+            />
+          </div>
+          <button type="submit">Verify Collection</button>
+        </form>
+      </div>
+
+      <!-- Verify Single NFT Tab -->
+      <div id="nft-tab" class="tab-content">
+        <form id="nft-form">
+          <div class="form-group">
+            <label for="nft-owner-address">Owner Address (Optional)</label>
+            <input
+              type="text"
+              id="nft-owner-address"
+              placeholder="Enter owner wallet address"
+            />
+          </div>
+          <div class="form-group">
+            <label for="nft-creator-address">Creator Address (Optional)</label>
+            <input
+              type="text"
+              id="nft-creator-address"
+              placeholder="Enter creator wallet address"
+            />
+          </div>
+          <div class="form-group">
+            <label for="nft-collection-name">Collection Name (Optional)</label>
+            <input
+              type="text"
+              id="nft-collection-name"
+              placeholder="Enter collection name"
+            />
+          </div>
+          <div class="form-group">
+            <label for="nft-token-id">Token ID (Optional)</label>
+            <input type="text" id="nft-token-id" placeholder="Enter token ID" />
+          </div>
+          <div class="error" id="nft-form-error"></div>
+          <button type="submit">Verify NFT</button>
+        </form>
+      </div>
+
+      <div class="loading" id="loading">Loading results...</div>
+
+      <div class="result" id="result">
+        <h2>Verification Results</h2>
+        <div id="result-content"></div>
+      </div>
+    </div>
+
+    <script>
+      // Base URL for your API
+      const API_BASE_URL = "/verify"; // Adjust based on your deployment
+
+      // Tab switching functionality
+      document.querySelectorAll(".tab").forEach((tab) => {
+        tab.addEventListener("click", () => {
+          // Remove active class from all tabs and content
+          document
+            .querySelectorAll(".tab")
+            .forEach((t) => t.classList.remove("active"));
+          document
+            .querySelectorAll(".tab-content")
+            .forEach((c) => c.classList.remove("active"));
+
+          // Add active class to clicked tab
+          tab.classList.add("active");
+
+          // Show corresponding content
+          const tabId = tab.getAttribute("data-tab");
+          document.getElementById(`${tabId}-tab`).classList.add("active");
+
+          // Hide results when switching tabs
+          document.getElementById("result").style.display = "none";
+        });
+      });
+
+      // Owner verification form
+      document
+        .getElementById("owner-form")
+        .addEventListener("submit", async function (e) {
+          e.preventDefault();
+          const ownerAddress = document
+            .getElementById("owner-address")
+            .value.trim();
+
+          if (!ownerAddress) {
+            showError("Please enter an owner address");
+            return;
+          }
+
+          showLoading();
+
+          try {
+            const response = await axios.get(
+              `${API_BASE_URL}/owner/${ownerAddress}`
+            );
+            displayResults(response.data);
+          } catch (error) {
+            handleError(error);
+          } finally {
+            hideLoading();
+          }
+        });
+
+      // Collection verification form
+      document
+        .getElementById("collection-form")
+        .addEventListener("submit", async function (e) {
+          e.preventDefault();
+          const creatorAddress = document
+            .getElementById("creator-address")
+            .value.trim();
+          const collectionName = document
+            .getElementById("collection-name")
+            .value.trim();
+          const tokenId = document
+            .getElementById("collection-token-id")
+            .value.trim();
+
+          if (!creatorAddress || !collectionName) {
+            showError("Please enter both creator address and collection name");
+            return;
+          }
+
+          showLoading();
+
+          try {
+            let url = `${API_BASE_URL}/collection?creator_address=${encodeURIComponent(
+              creatorAddress
+            )}&collection_name=${encodeURIComponent(collectionName)}`;
+
+            if (tokenId) {
+              url += `&token_id=${encodeURIComponent(tokenId)}`;
+            }
+
+            const response = await axios.get(url);
+            displayResults(response.data);
+          } catch (error) {
+            handleError(error);
+          } finally {
+            hideLoading();
+          }
+        });
+
+      // Single NFT verification form
+      document
+        .getElementById("nft-form")
+        .addEventListener("submit", async function (e) {
+          e.preventDefault();
+          const ownerAddress = document
+            .getElementById("nft-owner-address")
+            .value.trim();
+          const creatorAddress = document
+            .getElementById("nft-creator-address")
+            .value.trim();
+          const collectionName = document
+            .getElementById("nft-collection-name")
+            .value.trim();
+          const tokenId = document.getElementById("nft-token-id").value.trim();
+
+          // Clear previous errors
+          document.getElementById("nft-form-error").textContent = "";
+
+          // Check if minimum required fields are provided
+          if (!ownerAddress && !(creatorAddress && collectionName)) {
+            document.getElementById("nft-form-error").textContent =
+              "Please provide either an owner address or both creator address and collection name";
+            return;
+          }
+
+          showLoading();
+
+          try {
+            let url = `${API_BASE_URL}/nft?`;
+
+            if (ownerAddress)
+              url += `owner_address=${encodeURIComponent(ownerAddress)}&`;
+            if (creatorAddress)
+              url += `creator_address=${encodeURIComponent(creatorAddress)}&`;
+            if (collectionName)
+              url += `collection_name=${encodeURIComponent(collectionName)}&`;
+            if (tokenId) url += `token_id=${encodeURIComponent(tokenId)}&`;
+
+            // Remove trailing '&'
+            url = url.slice(0, -1);
+
+            const response = await axios.get(url);
+            displayResults(response.data);
+          } catch (error) {
+            handleError(error);
+          } finally {
+            hideLoading();
+          }
+        });
+
+      // Helper functions
+      function showLoading() {
+        document.getElementById("loading").style.display = "block";
+        document.getElementById("result").style.display = "none";
+      }
+
+      function hideLoading() {
+        document.getElementById("loading").style.display = "none";
+      }
+
+      function showError(message) {
+        const resultDiv = document.getElementById("result");
+        const resultContent = document.getElementById("result-content");
+
+        resultContent.innerHTML = `<div class="error">${message}</div>`;
+        resultDiv.style.display = "block";
+      }
+
+      function handleError(error) {
+        let errorMessage = "An unexpected error occurred";
+
+        if (error.response) {
+          // The request was made and the server responded with an error status
+          if (error.response.data && error.response.data.detail) {
+            errorMessage = error.response.data.detail;
+          } else {
+            errorMessage = `Error: ${error.response.status} - ${error.response.statusText}`;
+          }
+        } else if (error.request) {
+          // The request was made but no response was received
+          errorMessage =
+            "No response received from server. Please check your connection.";
+        } else {
+          // Something else caused the error
+          errorMessage = error.message || errorMessage;
+        }
+
+        showError(errorMessage);
+      }
+
+      // Render verification badge based on verification status
+      function renderVerificationBadge(isVerified, isHighRisk) {
+        if (isVerified === true) {
+          return `<div class="verification-badge verified">Verified ✓</div>`;
+        } else if (isHighRisk === true) {
+          return `<div class="verification-badge unverified">High Risk ⚠️</div>`;
+        } else if (isVerified === false) {
+          return `<div class="verification-badge unverified">Unverified ✗</div>`;
+        } else {
+          return `<div class="verification-badge warning-badge">Unknown Status</div>`;
+        }
+      }
+
+      // Render risk meter
+      function renderRiskMeter(riskScore) {
+        if (riskScore === undefined) return "";
+
+        // Cap risk score at 100
+        const score = Math.min(Math.max(riskScore, 0), 100);
+
+        return `
+                <div>
+                    <p><strong>Risk Score:</strong> ${score}/100</p>
+                    <div class="risk-meter">
+                        <div class="risk-level" style="width: ${score}%"></div>
+                    </div>
+                    <p class="text-sm">
+                        ${
+                          score < 30
+                            ? "Low risk"
+                            : score < 70
+                            ? "Medium risk"
+                            : "High risk"
+                        }
+                    </p>
+                </div>
+            `;
+      }
+
+      // Render risk factors
+      function renderRiskFactors(factors) {
+        if (!factors || factors.length === 0) return "";
+
+        const factorDescriptions = {
+          INCOMPLETE_METADATA: "NFT is missing essential metadata",
+          HIGH_TRANSFER_VELOCITY:
+            "NFT has been transferred multiple times in a short period",
+          NEW_CREATOR_ACCOUNT: "Creator account is less than 30 days old",
+          ZERO_SUPPLY: "Collection has zero supply",
+          VERY_LOW_SUPPLY: "Collection has very low supply",
+          SUSPICIOUS_ACTIVITY: "Suspicious activity detected",
+        };
+
+        let factorsList = factors
+          .map((factor) => {
+            return `<li>${factorDescriptions[factor] || factor}</li>`;
+          })
+          .join("");
+
+        return `
+                <div class="risk-factors">
+                    <strong>Risk Factors Detected:</strong>
+                    <ul>${factorsList}</ul>
+                </div>
+            `;
+      }
+
+      // Render scammer warning
+      function renderScammerWarning(isScammer) {
+        if (!isScammer) return "";
+
+        return `
+                <div class="error" style="padding: 10px; margin: 10px 0; background-color: rgba(239, 68, 68, 0.1); border-radius: 6px;">
+                    <strong>⚠️ WARNING:</strong> This address is flagged in our database of known scammers!
+                </div>
+            `;
+      }
+
+      function displayResults(data) {
+        const resultDiv = document.getElementById("result");
+        const resultContent = document.getElementById("result-content");
+
+        // Clear previous results
+        resultContent.innerHTML = "";
+
+        // Owner verification summary (if applicable)
+        if (data.owner_address) {
+          resultContent.innerHTML += `
+            <div class="summary-box">
+                <h3>Account Information</h3>
+                <p><strong>Address:</strong> ${data.owner_address}</p>
+                ${renderScammerWarning(data.is_scammer)}
+                ${
+                  data.verification_results
+                    ? `<p><strong>Average Risk Score:</strong> 
+                    ${
+                      data.verification_results.average_risk_score
+                        ? data.verification_results.average_risk_score.toFixed(
+                            1
+                          ) + "/100"
+                        : "N/A"
+                    }
+                    </p>`
+                    : ""
+                }
+                ${
+                  data.verification_results &&
+                  data.verification_results.is_verified !== undefined
+                    ? renderVerificationBadge(
+                        data.verification_results.is_verified,
+                        false
+                      )
+                    : ""
+                }
+                ${
+                  data.verification_results &&
+                  data.verification_results.verification_timestamp
+                    ? `<p><small>Verified on: ${new Date(
+                        data.verification_results.verification_timestamp
+                      ).toLocaleString()}</small></p>`
+                    : ""
+                }
+            </div>
+        `;
+
+          // Token Balances Section
+          if (data.token_balances && data.token_balances.length > 0) {
+            resultContent.innerHTML += `
+                <div class="summary-box">
+                    <h3>Token/Coin Balances</h3>
+                    <table class="w-full">
+                        <thead>
+                            <tr>
+                                <th class="text-left">Token</th>
+                                <th class="text-right">Balance</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${data.token_balances
+                              .map(
+                                (token) => `
+                                <tr>
+                                    <td class="text-left">${token.name}</td>
+                                    <td class="text-right">${formatNumber(
+                                      token.amount
+                                    )}</td>
+                                </tr>
+                            `
+                              )
+                              .join("")}
+                        </tbody>
+                    </table>
+                </div>
+            `;
+          }
+
+          // Account Activities Section
+          if (data.account_activities) {
+            const activities = data.account_activities;
+            resultContent.innerHTML += `
+                <div class="summary-box">
+                    <h3>Account Activities</h3>
+                    <ul>
+                        ${
+                          activities.nft_staking
+                            ? `<li>Has participated in NFT staking</li>`
+                            : `<li>Has not participated in NFT staking</li>`
+                        }
+                        <li>Has participated in token swaps (${
+                          activities.token_swaps.listing_count
+                        } listing events, 
+                            ${
+                              activities.token_swaps.swap_count
+                            } swap events)</li>
+                        <li>Has had NFT transfers (deposit events: ${
+                          activities.nft_transfers.deposit_count
+                        }, 
+                            withdraw events: ${
+                              activities.nft_transfers.withdraw_count
+                            })</li>
+                        <li>Has made token property modifications (${
+                          activities.property_modifications
+                        } events)</li>
+                    </ul>
+                    
+                    ${
+                      activities.recent_transactions.length > 0
+                        ? `
+                        <h4 class="mt-4">Recent Transactions</h4>
+                        <table class="w-full">
+                            <thead>
+                                <tr>
+                                    <th class="text-left">Type</th>
+                                    <th class="text-left">Time</th>
+                                    <th class="text-left">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${activities.recent_transactions
+                                  .map(
+                                    (tx) => `
+                                    <tr>
+                                        <td>${tx.type}</td>
+                                        <td>${formatDate(tx.timestamp)}</td>
+                                        <td>${
+                                          tx.success
+                                            ? '<span class="verification-badge verified">Success</span>'
+                                            : '<span class="verification-badge unverified">Failed</span>'
+                                        }</td>
+                                    </tr>
+                                `
+                                  )
+                                  .join("")}
+                            </tbody>
+                        </table>
+                    `
+                        : ""
+                    }
+                </div>
+            `;
+          }
+        }
+
+        // Collection verification summary (if applicable)
+        if (data.collection_name) {
+          resultContent.innerHTML += `
+            <div class="summary-box">
+                <h3>Collection Verification Summary</h3>
+                <p><strong>Collection:</strong> ${data.collection_name}</p>
+                <p><strong>Creator:</strong> ${
+                  data.creator_address || "N/A"
+                }</p>
+                ${renderScammerWarning(data.is_scammer)}
+                ${
+                  data.verification_results
+                    ? renderVerificationBadge(
+                        data.verification_results.is_verified,
+                        data.verification_results.is_high_risk
+                      )
+                    : ""
+                }
+                ${
+                  data.verification_results
+                    ? renderRiskMeter(data.verification_results.risk_score)
+                    : ""
+                }
+                ${
+                  data.verification_results &&
+                  data.verification_results.risk_factors
+                    ? renderRiskFactors(data.verification_results.risk_factors)
+                    : ""
+                }
+            </div>
+        `;
+        }
+
+        // Display token-specific verification if available
+        if (data.token_data && data.token_verification) {
+          resultContent.innerHTML += `
+            <div class="summary-box">
+                <h3>Token Verification</h3>
+                <p><strong>Token:</strong> ${
+                  data.token_data.name || "N/A"
+                } (ID: ${data.token_data.id || "N/A"})</p>
+                ${renderVerificationBadge(
+                  data.token_verification.is_verified,
+                  data.token_verification.risk_assessment &&
+                    data.token_verification.risk_assessment.is_high_risk
+                )}
+                ${
+                  data.token_verification.risk_assessment
+                    ? renderRiskMeter(
+                        data.token_verification.risk_assessment.risk_score
+                      )
+                    : ""
+                }
+                ${
+                  data.token_verification.risk_assessment &&
+                  data.token_verification.risk_assessment.risk_factors
+                    ? renderRiskFactors(
+                        data.token_verification.risk_assessment.risk_factors
+                      )
+                    : ""
+                }
+                ${
+                  data.token_verification.reason
+                    ? `<p class="error"><strong>Reason:</strong> ${data.token_verification.reason}</p>`
+                    : ""
+                }
+            </div>
+        `;
+        }
+
+        // Display questionable NFTs if any
+        if (
+          data.verification_results &&
+          data.verification_results.questionable_nfts &&
+          data.verification_results.questionable_nfts.length > 0
+        ) {
+          resultContent.innerHTML += `<h3>Questionable NFTs</h3>`;
+
+          data.verification_results.questionable_nfts.forEach((item) => {
+            const nft = item.nft_data;
+            const risk = item.risk_assessment;
+
+            const questionableCard = document.createElement("div");
+            questionableCard.className = "nft-card";
+
+            let cardContent = `
+                <div class="verification-badge unverified">High Risk ⚠️</div>
+                <h3>${nft.name || "NFT information is secure"}</h3>
+                <p><strong>Token ID:</strong> ${nft.id || "hiden"}</p>
+                <p><strong>Collection:</strong> ${nft.collection || "hiden"}</p>
+                <p><strong>Creator:</strong> ${nft.creator || "Permission Denied"}</p>
+                ${renderRiskMeter(risk.risk_score)}
+                ${renderRiskFactors(risk.risk_factors)}
+            `;
+
+            questionableCard.innerHTML = cardContent;
+            resultContent.appendChild(questionableCard);
+          });
+        }
+
+        // NFT listing
+        if (data.nfts && data.nfts.length > 0) {
+          // Create NFT holdings summary by collection
+          const nftsByCollection = {};
+          data.nfts.forEach((nft) => {
+            const collection = nft.collection || "Uncategorized";
+            if (!nftsByCollection[collection]) {
+              nftsByCollection[collection] = [];
+            }
+            nftsByCollection[collection].push(nft);
+          });
+
+          // Display NFT holdings summary
+          resultContent.innerHTML += `
+            <div class="summary-box">
+                <h3>NFT Holdings Summary</h3>
+                <ul>
+                    ${Object.entries(nftsByCollection)
+                      .map(
+                        ([collection, nfts]) => `
+                        <li><strong>${collection}:</strong> ${nfts
+                          .map(
+                            (nft) => `${nft.name}${nft.id ? ` #${nft.id}` : ""}`
+                          )
+                          .join(", ")}</li>
+                    `
+                      )
+                      .join("")}
+                </ul>
+            </div>
+        `;
+
+          // Display NFTs by owner (detailed view)
+          resultContent.innerHTML += `<h3>Found ${data.nfts.length} NFT(s)</h3>`;
+
+          data.nfts.forEach((nft) => {
+            const nftCard = document.createElement("div");
+            nftCard.className = "nft-card";
+
+            // Check if this NFT is in the questionable list
+            let isQuestionable = false;
+            if (
+              data.verification_results &&
+              data.verification_results.questionable_nfts
+            ) {
+              isQuestionable = data.verification_results.questionable_nfts.some(
+                (item) => item.nft_data.id === nft.id
+              );
+            }
+
+            let cardContent = `
+                ${!isQuestionable ? renderVerificationBadge(true, false) : ""}
+                <h3>${nft.name || "NFT information is secure"}</h3>
+                <p><strong>Token ID:</strong> ${nft.id || "Hiden"}</p>
+                <p><strong>Collection:</strong> ${nft.collection || "Hiden"}</p>
+                <p><strong>Creator:</strong> ${nft.creator || "Permission Denied"}</p>
+            `;
+
+            if (nft.uri) {
+              cardContent += `<p><strong>URI:</strong> <a href="${nft.uri}" target="_blank">${nft.uri}</a></p>`;
+            }
+
+            if (nft.description) {
+              cardContent += `<p><strong>Description:</strong> ${nft.description}</p>`;
+            }
+
+            if (nft.metadata) {
+              cardContent += `<details>
+                    <summary>Metadata</summary>
+                    <pre>${JSON.stringify(nft.metadata, null, 2)}</pre>
+                </details>`;
+            }
+
+            nftCard.innerHTML = cardContent;
+            resultContent.appendChild(nftCard);
+          });
+        } else if (data.collection_data) {
+          // Display collection data
+          resultContent.innerHTML += `
+            <h3>Collection: ${
+              data.collection_data.name || "Unnamed Collection"
+            }</h3>
+            <p><strong>Creator:</strong> ${
+              data.collection_data.creator || "N/A"
+            }</p>
+            <p><strong>Total Items:</strong> ${
+              data.collection_data.total_items || "N/A"
+            }</p>
+        `;
+
+          if (
+            data.collection_data.items &&
+            data.collection_data.items.length > 0
+          ) {
+            resultContent.innerHTML += `<h3>Collection Items</h3>`;
+
+            data.collection_data.items.forEach((item) => {
+              const itemCard = document.createElement("div");
+              itemCard.className = "nft-card";
+
+              let cardContent = `
+                    <h3>${item.name || "Unnamed Item"}</h3>
+                    <p><strong>Token ID:</strong> ${item.id || "N/A"}</p>
+                    <p><strong>Owner:</strong> ${item.owner || "N/A"}</p>
+                `;
+
+              if (item.metadata) {
+                cardContent += `<details>
+                        <summary>Metadata</summary>
+                        <pre>${JSON.stringify(item.metadata, null, 2)}</pre>
+                    </details>`;
+              }
+
+              itemCard.innerHTML = cardContent;
+              resultContent.appendChild(itemCard);
+            });
+          }
+
+          if (data.collection_data.metadata) {
+            resultContent.innerHTML += `
+                <details>
+                    <summary>Collection Metadata</summary>
+                    <pre>${JSON.stringify(
+                      data.collection_data.metadata,
+                      null,
+                      2
+                    )}</pre>
+                </details>
+            `;
+          }
+        } else {
+          // No data found
+          resultContent.innerHTML =
+            "<p>No NFT data found matching your criteria.</p>";
+        }
+
+        resultDiv.style.display = "block";
+      }
+
+      // Helper function to format numbers with commas
+      function formatNumber(num) {
+        if (num === undefined || num === null) return "N/A";
+
+        // Convert to number if it's a string
+        num = typeof num === "string" ? parseFloat(num) : num;
+
+        // Format with commas
+        return num.toLocaleString();
+      }
+
+      // Helper function to format dates
+      function formatDate(dateString) {
+        if (!dateString) return "N/A";
+
+        try {
+          const date = new Date(dateString);
+          return date.toLocaleString();
+        } catch (e) {
+          return dateString;
+        }
+      }
+    </script>
+  </body>
+</html>
