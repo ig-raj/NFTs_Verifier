@@ -5,243 +5,624 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>NFT Verifier</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/1.3.4/axios.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
       :root {
-        --primary: #6366f1;
-        --primary-hover: #4f46e5;
-        --secondary: #f3f4f6;
-        --text: #1f2937;
-        --error: #ef4444;
-        --success: #10b981;
-        --warning: #f59e0b;
+        --primary: #ff6f61; /* Coral for primary elements */
+        --primary-hover: #ff4f40; /* Darker coral for hover */
+        --secondary: #4a90e2; /* Soft blue for secondary elements */
+        --text: #e0e0e0; /* Light gray for text */
+        --error: #ff4d4d; /* Red for errors */
+        --success: #39ff14; /* Neon green for success */
+        --warning: #ffaa00; /* Orange for warnings */
+        --background: #0d1a26; /* Deep space blue-black background */
+        --card-bg: #1a2b3c; /* Darker card background with a subtle blue tint */
+        --border: #2a3b4c; /* Subtle border color */
+        --glow: 0 0 10px #ff6f61, 0 0 20px #ff6f61, 0 0 30px #ff6f61;
+        --gradient: linear-gradient(135deg, #0d1a26 0%, #1a2b3c 100%);
+      }
+
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
       }
 
       body {
-        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-        background-color: #f9fafb;
+        font-family: "Poppins", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        background: var(--gradient);
         color: var(--text);
-        margin: 0;
-        padding: 20px;
         line-height: 1.6;
+        font-size: 16px;
+        position: relative;
+        overflow-x: hidden;
+        display: flex;
+        flex-direction: column;
+        min-height: 100vh;
+      }
+
+      /* Space-inspired background with subtle particles */
+      body::before {
+        content: "";
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: radial-gradient(circle, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+        background-size: 50px 50px;
+        opacity: 0.3;
+        z-index: -1;
+        animation: floatParticles 20s linear infinite;
+      }
+
+      @keyframes floatParticles {
+        0% { background-position: 0 0; }
+        100% { background-position: 50px 50px; }
       }
 
       .container {
-        max-width: 1000px;
+        max-width: 1280px;
         margin: 0 auto;
-        padding: 20px;
+        padding: 3rem 1.5rem;
+        position: relative;
+        z-index: 1;
+        flex: 1;
+      }
+
+      header {
+        text-align: center;
+        padding: 2rem;
       }
 
       h1 {
-        text-align: center;
-        color: var(--primary);
-        margin-bottom: 2rem;
+        font-family: "Orbitron", sans-serif;
+        font-size: 4rem;
+        font-weight: 700;
+        background: linear-gradient(90deg, var(--primary) 0%, var(--secondary) 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        margin: 0;
+        letter-spacing: 0.15em;
+        text-transform: uppercase;
+        text-shadow: 0 0 15px rgba(255, 111, 97, 0.7), 
+                     0 0 30px rgba(74, 144, 226, 0.5), 
+                     0 2px 5px rgba(0, 0, 0, 0.5); /* Adds a 3D effect */
+        animation: neonFlicker 3s infinite alternate;
+      }
+
+      @keyframes neonFlicker {
+        0%, 19%, 21%, 23%, 25%, 54%, 56%, 100% {
+          text-shadow: 0 0 15px rgba(255, 111, 97, 0.7), 
+                       0 0 30px rgba(74, 144, 226, 0.5), 
+                       0 2px 5px rgba(0, 0, 0, 0.5);
+          opacity: 1;
+        }
+        20%, 24%, 55% {
+          text-shadow: 0 0 5px rgba(255, 111, 97, 0.3), 
+                       0 0 10px rgba(74, 144, 226, 0.2), 
+                       0 2px 5px rgba(0, 0, 0, 0.5);
+          opacity: 0.8;
+        }
       }
 
       .tabs {
         display: flex;
-        margin-bottom: 20px;
-        border-bottom: 1px solid #e5e7eb;
+        justify-content: center;
+        gap: 1rem;
+        margin: 2rem 0;
+        padding: 0.5rem;
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 12px;
+        border: 1px solid var(--border);
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
       }
 
       .tab {
-        padding: 10px 20px;
-        cursor: pointer;
-        border: none;
+        padding: 0.75rem 2rem;
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: var(--text);
         background: none;
-        font-size: 16px;
-        font-weight: 500;
-        color: #6b7280;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+      }
+
+      .tab:hover {
+        color: var(--primary);
+        background: rgba(255, 111, 97, 0.1);
+        box-shadow: 0 2px 10px rgba(255, 111, 97, 0.3);
       }
 
       .tab.active {
-        color: var(--primary);
-        border-bottom: 2px solid var(--primary);
+        color: white;
+        background: var(--primary);
+        box-shadow: 0 2px 10px rgba(255, 111, 97, 0.5);
       }
 
       .tab-content {
         display: none;
+        background: var(--card-bg);
+        padding: 2rem;
+        border-radius: 12px;
+        border: 1px solid var(--border);
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+        animation: slideIn 0.5s ease;
       }
 
       .tab-content.active {
         display: block;
       }
 
+      @keyframes slideIn {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+
       .form-group {
-        margin-bottom: 15px;
+        margin-bottom: 1.75rem;
       }
 
       label {
+        font-weight: 600;
+        margin-bottom: 0.5rem;
         display: block;
-        margin-bottom: 5px;
-        font-weight: 500;
+        color: var(--primary);
+        text-shadow: 0 0 5px rgba(255, 111, 97, 0.3);
       }
 
       input[type="text"] {
         width: 100%;
-        padding: 10px;
-        border: 1px solid #d1d5db;
-        border-radius: 6px;
-        box-sizing: border-box;
-        font-size: 16px;
+        padding: 0.875rem 1.25rem;
+        border: 2px solid var(--border);
+        border-radius: 8px;
+        font-size: 1rem;
+        background: #121212;
+        color: var(--text);
+        transition: all 0.3s ease;
       }
 
       input[type="text"]:focus {
-        outline: none;
         border-color: var(--primary);
-        box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+        box-shadow: 0 0 10px rgba(255, 111, 97, 0.5);
+        outline: none;
       }
 
       button {
-        background-color: var(--primary);
+        background: var(--primary);
         color: white;
+        padding: 0.875rem 2rem;
         border: none;
-        padding: 10px 20px;
-        border-radius: 6px;
+        border-radius: 8px;
+        font-size: 1.1rem;
+        font-weight: 600;
         cursor: pointer;
-        font-size: 16px;
-        font-weight: 500;
-        transition: background-color 0.2s;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 15px rgba(255, 111, 97, 0.4);
       }
 
-      button:hover {
-        background-color: var(--primary-hover);
+      button:hover:not(:disabled) {
+        background: var(--primary-hover);
+        transform: scale(1.05);
+        box-shadow: 0 6px 20px rgba(255, 111, 97, 0.6);
+      }
+
+      button:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+        box-shadow: none;
       }
 
       .result {
-        margin-top: 20px;
-        padding: 20px;
-        background-color: white;
-        border-radius: 6px;
-        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        margin-top: 2.5rem;
         display: none;
+      }
+
+      .result h2 {
+        font-size: 2rem;
+        font-weight: 700;
+        color: var(--primary);
+        padding-bottom: 1rem;
+        border-bottom: 2px solid var(--border);
+        text-shadow: 0 0 5px rgba(255, 111, 97, 0.3);
       }
 
       .error {
         color: var(--error);
-        margin-top: 10px;
-        font-size: 14px;
+        FONT-WEIGHT: 500;
+        margin-top: 0.75rem;
+        text-shadow: 0 0 5px rgba(255, 77, 77, 0.3);
       }
 
       .success {
         color: var(--success);
+        text-shadow: 0 0 5px rgba(57, 255, 20, 0.3);
       }
 
       .warning {
         color: var(--warning);
+        text-shadow: 0 0 5px rgba(255, 170, 0, 0.3);
       }
 
       .loading {
-        text-align: center;
-        margin-top: 20px;
-        font-style: italic;
-        color: #6b7280;
         display: none;
+        text-align: center;
+        padding: 2rem;
+      }
+
+      .loading-spinner {
+        width: 48px;
+        height: 48px;
+        border: 4px solid var(--border);
+        border-top-color: var(--primary);
+        border-radius: 50%;
+        animation: spin 0.8s linear infinite;
+        margin-bottom: 1rem;
+        box-shadow: 0 0 10px rgba(255, 111, 97, 0.5);
+      }
+
+      @keyframes spin {
+        to { transform: rotate(360deg); }
       }
 
       .nft-card {
-        border: 1px solid #e5e7eb;
-        border-radius: 8px;
-        padding: 15px;
-        margin-bottom: 15px;
-        background-color: white;
+        background: var(--card-bg);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 1.75rem;
+        margin-bottom: 1.5rem;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+      }
+
+      .nft-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 25px rgba(255, 111, 97, 0.3);
       }
 
       .nft-card h3 {
-        margin-top: 0;
+        font-size: 1.5rem;
+        font-weight: 600;
         color: var(--primary);
+        margin: 0 0 1rem;
+        text-shadow: 0 0 5px rgba(255, 111, 97, 0.3);
       }
 
       pre {
-        background-color: #f3f4f6;
-        padding: 15px;
-        border-radius: 6px;
+        background: #121212;
+        padding: 1rem;
+        border-radius: 8px;
+        font-size: 0.9rem;
         overflow-x: auto;
-        font-size: 14px;
+        color: var(--text);
+        border: 1px solid var(--border);
       }
 
       .verification-badge {
-        display: inline-block;
-        padding: 3px 10px;
+        padding: 0.4rem 1rem;
         border-radius: 20px;
-        font-size: 14px;
-        font-weight: 500;
-        margin-bottom: 10px;
+        font-size: 0.9rem;
+        font-weight: 600;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.25rem;
       }
 
       .verified {
-        background-color: rgba(16, 185, 129, 0.1);
+        background: rgba(57, 255, 20, 0.1);
         color: var(--success);
         border: 1px solid var(--success);
+        box-shadow: 0 0 5px rgba(57, 255, 20, 0.3);
       }
 
       .unverified {
-        background-color: rgba(239, 68, 68, 0.1);
+        background: rgba(255, 77, 77, 0.1);
         color: var(--error);
         border: 1px solid var(--error);
+        box-shadow: 0 0 5px rgba(255, 77, 77, 0.3);
       }
 
       .warning-badge {
-        background-color: rgba(245, 158, 11, 0.1);
+        background: rgba(255, 170, 0, 0.1);
         color: var(--warning);
         border: 1px solid var(--warning);
+        box-shadow: 0 0 5px rgba(255, 170, 0, 0.3);
       }
 
       .risk-meter {
-        width: 100%;
-        height: 10px;
-        background-color: #e5e7eb;
-        border-radius: 5px;
-        margin: 10px 0;
+        height: 12px;
+        background: var(--border);
+        border-radius: 6px;
+        margin: 1rem 0;
         overflow: hidden;
+        border: 1px solid var(--border);
       }
 
       .risk-level {
         height: 100%;
-        border-radius: 5px;
-        background: linear-gradient(
-          90deg,
-          #10b981 0%,
-          #f59e0b 50%,
-          #ef4444 100%
-        );
+        border-radius: 6px;
+        background: linear-gradient(90deg, var(--success) 0%, var(--warning) 50%, var(--error) 100%);
         transition: width 0.5s ease;
       }
 
       .risk-factors {
-        margin-top: 10px;
-        padding: 10px;
-        background-color: #f9fafb;
-        border-radius: 6px;
-        border-left: 3px solid var(--warning);
+        background: rgba(255, 170, 0, 0.1);
+        padding: 1.25rem;
+        border-radius: 8px;
+        border-left: 4px solid var(--warning);
+        margin-top: 1rem;
+        box-shadow: 0 0 5px rgba(255, 170, 0, 0.3);
       }
 
       .summary-box {
-        background-color: #f9fafb;
-        border-radius: 6px;
-        padding: 15px;
-        margin-bottom: 20px;
-        border-left: 3px solid var(--primary);
+        background: var(--card-bg);
+        padding: 1.75rem;
+        border-radius: 12px;
+        border-left: 4px solid var(--primary);
+        margin-bottom: 1.5rem;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
       }
 
-      /* Responsive */
+      .summary-box h3 {
+        font-size: 1.5rem;
+        font-weight: 600;
+        color: var(--primary);
+        margin: 0 0 1rem;
+        text-shadow: 0 0 5px rgba(255, 111, 97, 0.3);
+      }
+
+      .coming-soon-alert {
+        background: rgba(255, 170, 0, 0.1);
+        padding: 1.25rem;
+        border-radius: 8px;
+        border-left: 4px solid var(--warning);
+        display: flex;
+        align-items: center;
+        font-weight: 500;
+        margin-bottom: 1.5rem;
+        box-shadow: 0 0 5px rgba(255, 170, 0, 0.3);
+      }
+
+      .coming-soon-alert:before {
+        content: "🚧";
+        font-size: 1.75rem;
+        margin-right: 1rem;
+      }
+
+      .results-grid {
+        display: grid;
+        gap: 1.5rem;
+        grid-template-columns: 1fr;
+      }
+
+      .section-title {
+        font-size: 1.5rem;
+        font-weight: 600;
+        color: var(--primary);
+        margin: 2rem 0 1rem;
+        padding-bottom: 0.5rem;
+        border-bottom: 2px solid var(--border);
+        text-shadow: 0 0 5px rgba(255, 111, 97, 0.3);
+      }
+
+      .collapsible {
+        background: var(--card-bg);
+        border-radius: 12px;
+        margin-bottom: 1rem;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+      }
+
+      .collapsible-header {
+        padding: 1.25rem 1.75rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        cursor: pointer;
+        transition: background 0.3s ease;
+      }
+
+      .collapsible-header:hover {
+        background: rgba(255, 111, 97, 0.1);
+      }
+
+      .collapsible-header h3 {
+        margin: 0;
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: var(--primary);
+        text-shadow: 0 0 5px rgba(255, 111, 97, 0.3);
+      }
+
+      .collapsible-content {
+        padding: 0 1.75rem 1.75rem;
+        display: none;
+      }
+
+      .collapsible.open .collapsible-header {
+        border-bottom: 1px solid var(--border);
+      }
+
+      .collapsible.open .collapsible-content {
+        display: block;
+      }
+
+      .expand-icon::after {
+        content: "+";
+        font-size: 1.5rem;
+        font-weight: 600;
+        transition: transform 0.3s ease;
+        color: var(--primary);
+        text-shadow: 0 0 5px rgba(255, 111, 97, 0.3);
+      }
+
+      .collapsible.open .expand-icon::after {
+        content: "−";
+        transform: rotate(180deg);
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 1rem 0;
+      }
+
+      th {
+        padding: 1rem;
+        background: rgba(255, 111, 97, 0.1);
+        font-weight: 600;
+        text-align: left;
+        color: var(--primary);
+        text-shadow: 0 0 5px rgba(255, 111, 97, 0.3);
+      }
+
+      td {
+        padding: 1rem;
+        border-bottom: 1px solid var(--border);
+        color: var(--text);
+      }
+
+      tr:last-child td {
+        border-bottom: none;
+      }
+
+      .nft-gallery {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+        gap: 1.5rem;
+        margin-top: 1.5rem;
+      }
+
+      /* Footer Styles */
+      footer {
+        background: var(--card-bg);
+        padding: 2rem 1.5rem;
+        border-top: 1px solid var(--border);
+        box-shadow: 0 -4px 15px rgba(0, 0, 0, 0.3);
+        width: 100%;
+        z-index: 1;
+      }
+
+      .footer-content {
+        max-width: 1280px;
+        margin: 0 auto;
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-between;
+        gap: 2rem;
+      }
+
+      .footer-section {
+        flex: 1;
+        min-width: 250px;
+      }
+
+      .footer-section h4 {
+        font-size: 1.2rem;
+        font-weight: 600;
+        color: var(--primary);
+        margin-bottom: 1rem;
+        text-shadow: 0 0 5px rgba(255, 111, 97, 0.3);
+      }
+
+      .footer-section p, .footer-section ul {
+        font-size: 0.9rem;
+        color: var(--text);
+      }
+
+      .footer-section ul {
+        list-style: none;
+        padding: 0;
+      }
+
+      .footer-section ul li {
+        margin-bottom: 0.5rem;
+      }
+
+      .footer-section a {
+        color: var(--secondary);
+        text-decoration: none;
+        transition: color 0.3s ease;
+      }
+
+      .footer-section a:hover {
+        color: var(--primary);
+        text-shadow: 0 0 5px rgba(255, 111, 97, 0.3);
+      }
+
+      .social-icons {
+        display: flex;
+        gap: 1rem;
+        margin-top: 1rem;
+      }
+
+      .social-icons a {
+        font-size: 1.5rem;
+        color: var(--text);
+        transition: color 0.3s ease, transform 0.3s ease;
+      }
+
+      .social-icons a:hover {
+        color: var(--primary);
+        transform: scale(1.2);
+        text-shadow: 0 0 5px rgba(255, 111, 97, 0.3);
+      }
+
+      .footer-bottom {
+        text-align: center;
+        margin-top: 2rem;
+        font-size: 0.8rem;
+        color: var(--text);
+        opacity: 0.7;
+      }
+
+      @media (min-width: 768px) {
+        .results-grid {
+          grid-template-columns: repeat(2, 1fr);
+        }
+      }
+
       @media (max-width: 768px) {
+        .container {
+          padding: 1.5rem;
+        }
+
         .tabs {
-          flex-wrap: wrap;
+          flex-direction: column;
+          align-items: stretch;
         }
 
         .tab {
-          flex: 1 0 33%;
-          text-align: center;
-          padding: 10px 5px;
-          font-size: 14px;
+          padding: 1rem;
+          border-radius: 8px;
+        }
+
+        .tab-content {
+          padding: 1.5rem;
+        }
+
+        .nft-gallery {
+          grid-template-columns: 1fr;
+        }
+
+        h1 {
+          font-size: 2.5rem;
+        }
+
+        .footer-content {
+          flex-direction: column;
+          gap: 1.5rem;
         }
       }
     </style>
   </head>
   <body>
-    <div class="container">
+    <header>
       <h1>NFT Verifier</h1>
-
+    </header>
+    
+    <div class="container">
       <div class="tabs">
         <button class="tab active" data-tab="owner">Verify by Owner</button>
         <button class="tab" data-tab="collection">Verify by Collection</button>
@@ -266,6 +647,7 @@
 
       <!-- Verify by Collection Tab -->
       <div id="collection-tab" class="tab-content">
+        <div class="coming-soon-alert">This feature is coming soon! We're working hard to bring you collection verification.</div>
         <form id="collection-form">
           <div class="form-group">
             <label for="creator-address">Creator Address</label>
@@ -274,6 +656,7 @@
               id="creator-address"
               placeholder="Enter creator wallet address"
               required
+              disabled
             />
           </div>
           <div class="form-group">
@@ -283,6 +666,7 @@
               id="collection-name"
               placeholder="Enter collection name"
               required
+              disabled
             />
           </div>
           <div class="form-group">
@@ -291,14 +675,16 @@
               type="text"
               id="collection-token-id"
               placeholder="Enter specific token ID (optional)"
+              disabled
             />
           </div>
-          <button type="submit">Verify Collection</button>
+          <button type="submit" disabled>Verify Collection</button>
         </form>
       </div>
 
       <!-- Verify Single NFT Tab -->
       <div id="nft-tab" class="tab-content">
+        <div class="coming-soon-alert">This feature is coming soon! We're working hard to bring you single NFT verification.</div>
         <form id="nft-form">
           <div class="form-group">
             <label for="nft-owner-address">Owner Address (Optional)</label>
@@ -306,6 +692,7 @@
               type="text"
               id="nft-owner-address"
               placeholder="Enter owner wallet address"
+              disabled
             />
           </div>
           <div class="form-group">
@@ -314,6 +701,7 @@
               type="text"
               id="nft-creator-address"
               placeholder="Enter creator wallet address"
+              disabled
             />
           </div>
           <div class="form-group">
@@ -322,24 +710,67 @@
               type="text"
               id="nft-collection-name"
               placeholder="Enter collection name"
+              disabled
             />
           </div>
           <div class="form-group">
             <label for="nft-token-id">Token ID (Optional)</label>
-            <input type="text" id="nft-token-id" placeholder="Enter token ID" />
+            <input type="text" id="nft-token-id" placeholder="Enter token ID" disabled />
           </div>
           <div class="error" id="nft-form-error"></div>
-          <button type="submit">Verify NFT</button>
+          <button type="submit" disabled>Verify NFT</button>
         </form>
       </div>
 
-      <div class="loading" id="loading">Loading results...</div>
+      <div class="loading" id="loading">
+        <div class="loading-spinner"></div>
+        <p>Verifying NFT data...</p>
+      </div>
 
       <div class="result" id="result">
         <h2>Verification Results</h2>
-        <div id="result-content"></div>
+        <div id="result-content" class="results-grid"></div>
       </div>
     </div>
+
+    <!-- Footer -->
+    <footer>
+      <div class="footer-content">
+        <div class="footer-section">
+          <h4>About NFT Verifier</h4>
+          <p>
+            NFT Verifier is a cutting-edge tool designed to help users verify the authenticity and security of NFTs in the Web3 ecosystem. Built with a focus on transparency and user experience, it allows you to verify NFTs by owner, collection, or single token, with detailed risk assessments.
+          </p>
+        </div>
+        <div class="footer-section">
+          <h4>How It Works</h4>
+          <p>
+            Simply input a wallet address, collection name, or token ID to verify NFTs. Our system integrates with blockchain APIs to fetch real-time data, analyze it for risks, and present the results in an intuitive, futuristic UI. Features like risk meters and collapsible sections make it easy to understand the verification results.
+          </p>
+        </div>
+        <div class="footer-section">
+          <h4>Our Team</h4>
+          <ul>
+            <li>Alex Smith - Lead Developer</li>
+            <li>Sarah Johnson - UI/UX Designer</li>
+            <li>Michael Chen - Blockchain Specialist</li>
+            <li>Emily Davis - Project Manager</li>
+          </ul>
+        </div>
+        <div class="footer-section">
+          <h4>Connect With Us</h4>
+          <div class="social-icons">
+            <a href="https://twitter.com/nftverifier" target="_blank">🐦</a>
+            <a href="https://github.com/nftverifier" target="_blank">🐙</a>
+            <a href="https://discord.gg/nftverifier" target="_blank">💬</a>
+            <a href="https://reddit.com/r/nftverifier" target="_blank">👽</a>
+          </div>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <p>© 2025 NFT Verifier • All Rights Reserved</p>
+      </div>
+    </footer>
 
     <script>
       // Base URL for your API
@@ -527,6 +958,29 @@
         showError(errorMessage);
       }
 
+      // Create a collapsible section
+      function createCollapsible(title, content, isOpen = false) {
+        const section = document.createElement('div');
+        section.className = `collapsible ${isOpen ? 'open' : ''}`;
+        
+        const header = document.createElement('div');
+        header.className = 'collapsible-header';
+        header.innerHTML = `<h3>${title}</h3><span class="expand-icon"></span>`;
+        
+        const contentDiv = document.createElement('div');
+        contentDiv.className = 'collapsible-content';
+        contentDiv.innerHTML = content;
+        
+        section.appendChild(header);
+        section.appendChild(contentDiv);
+        
+        header.addEventListener('click', () => {
+          section.classList.toggle('open');
+        });
+        
+        return section;
+      }
+
       // Render verification badge based on verification status
       function renderVerificationBadge(isVerified, isHighRisk) {
         if (isVerified === true) {
@@ -546,22 +1000,16 @@
 
         // Cap risk score at 100
         const score = Math.min(Math.max(riskScore, 0), 100);
+        const riskText = score < 30 ? "Low risk" : score < 70 ? "Medium risk" : "High risk";
 
         return `
                 <div>
-                    <p><strong>Risk Score:</strong> ${score}/100</p>
+                    <p><strong>Risk Score:</strong> ${score}/100 <span style="font-weight: 500; color: ${
+                      score < 30 ? "var(--success)" : score < 70 ? "var(--warning)" : "var(--error)"
+                    }">(${riskText})</span></p>
                     <div class="risk-meter">
                         <div class="risk-level" style="width: ${score}%"></div>
                     </div>
-                    <p class="text-sm">
-                        ${
-                          score < 30
-                            ? "Low risk"
-                            : score < 70
-                            ? "Medium risk"
-                            : "High risk"
-                        }
-                    </p>
                 </div>
             `;
       }
@@ -599,7 +1047,7 @@
         if (!isScammer) return "";
 
         return `
-                <div class="error" style="padding: 10px; margin: 10px 0; background-color: rgba(239, 68, 68, 0.1); border-radius: 6px;">
+                <div class="error" style="padding: 1rem; margin: 1rem 0; background-color: rgba(255, 77, 77, 0.1); border-radius: 0.5rem;">
                     <strong>⚠️ WARNING:</strong> This address is flagged in our database of known scammers!
                 </div>
             `;
@@ -614,73 +1062,76 @@
 
         // Owner verification summary (if applicable)
         if (data.owner_address) {
-          resultContent.innerHTML += `
-            <div class="summary-box">
-                <h3>Account Information</h3>
-                <p><strong>Address:</strong> ${data.owner_address}</p>
-                ${renderScammerWarning(data.is_scammer)}
-                ${
-                  data.verification_results
-                    ? `<p><strong>Average Risk Score:</strong> 
-                    ${
-                      data.verification_results.average_risk_score
-                        ? data.verification_results.average_risk_score.toFixed(
-                            1
-                          ) + "/100"
-                        : "N/A"
-                    }
-                    </p>`
-                    : ""
-                }
-                ${
-                  data.verification_results &&
-                  data.verification_results.is_verified !== undefined
-                    ? renderVerificationBadge(
-                        data.verification_results.is_verified,
-                        false
-                      )
-                    : ""
-                }
-                ${
-                  data.verification_results &&
-                  data.verification_results.verification_timestamp
-                    ? `<p><small>Verified on: ${new Date(
-                        data.verification_results.verification_timestamp
-                      ).toLocaleString()}</small></p>`
-                    : ""
-                }
-            </div>
-        `;
+          const accountSection = document.createElement('div');
+          accountSection.className = 'summary-box';
+          
+          let accountContent = `
+              <h3>Account Information</h3>
+              <p><strong>Address:</strong> ${data.owner_address}</p>
+              ${renderScammerWarning(data.is_scammer)}
+              ${
+                data.verification_results
+                  ? `<p><strong>Average Risk Score:</strong> 
+                  ${
+                    data.verification_results.average_risk_score
+                      ? data.verification_results.average_risk_score.toFixed(
+                          1
+                        ) + "/100"
+                      : "N/A"
+                  }
+                  </p>`
+                  : ""
+              }
+              ${
+                data.verification_results &&
+                data.verification_results.is_verified !== undefined
+                  ? renderVerificationBadge(
+                      data.verification_results.is_verified,
+                      false
+                    )
+                  : ""
+              }
+              ${
+                data.verification_results &&
+                data.verification_results.verification_timestamp
+                  ? `<p><small>Verified on: ${new Date(
+                      data.verification_results.verification_timestamp
+                    ).toLocaleString()}</small></p>`
+                  : ""
+              }
+          `;
+          
+          accountSection.innerHTML = accountContent;
+          resultContent.appendChild(accountSection);
 
           // Token Balances Section
           if (data.token_balances && data.token_balances.length > 0) {
-            resultContent.innerHTML += `
-                <div class="summary-box">
-                    <h3>Token/Coin Balances</h3>
-                    <table class="w-full">
-                        <thead>
+            let balancesContent = `
+                <h3>Token/Coin Balances</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Token</th>
+                            <th>Balance</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${data.token_balances
+                          .map(
+                            (token) => `
                             <tr>
-                                <th class="text-left">Token</th>
-                                <th class="text-right">Balance</th>
+                                <td>${token.name}</td>
+                                <td>${formatNumber(token.amount)}</td>
                             </tr>
-                        </thead>
-                        <tbody>
-                            ${data.token_balances
-                              .map(
-                                (token) => `
-                                <tr>
-                                    <td class="text-left">${token.name}</td>
-                                    <td class="text-right">${formatNumber(
-                                      token.amount
-                                    )}</td>
-                                </tr>
-                            `
-                              )
-                              .join("")}
-                        </tbody>
-                    </table>
-                </div>
+                        `
+                          )
+                          .join("")}
+                    </tbody>
+                </table>
             `;
+            
+            const balancesSection = createCollapsible('Token Balances', balancesContent);
+            resultContent.appendChild(balancesSection);
           }
 
           // Account Activities Section
